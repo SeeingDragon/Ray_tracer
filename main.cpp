@@ -3,15 +3,27 @@
 #include "color.h"
 #include "ray.h"
 
+bool hit_sphere(const point3& center, double radius, const ray& r)
+{	//t(2) * b*b + 2tb*(A-C)+(A-C)*(A-C)-r*r; 
+	vec3 oc = r.origin() - center;
+	auto a = dot(r.direction(), r.direction());
+	auto b = 2.0 * dot(oc, r.direction());
+	auto c = dot(oc, oc) - radius * radius;
+	//计算函数是否有解
+	auto discriminant = b * b - 4 * a * c;
+	return (discriminant > 0);
+}
 
 
 color ray_color(const ray& r)
 {
+	if (hit_sphere(point3(0, 0, -1), 0.5, r))
+		return color(1, 0, 0);
 	//获取单位向量
 	//r=origin+t*direction
 	//direction方向y轴的取值范围是（-1，1）
 	vec3 unit_direction = unit_vector(r.direction());
-	std::cout << unit_direction << std::endl;
+	//std::cout << unit_direction << std::endl;
 	//要让t从0到1变化，unit_direction大概范围是-0.7-0.7
 	auto t = 0.5 * (unit_direction.y()+ 1.0);
 	return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
@@ -55,7 +67,7 @@ int main()
 			ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
 			//定义在vec3.h的颜色向量
 			color pixel_color=ray_color(r);
-			//write_color(std::cout, pixel_color);
+			write_color(std::cout, pixel_color);
 		}
 	}
 	
