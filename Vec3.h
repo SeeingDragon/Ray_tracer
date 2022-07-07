@@ -26,7 +26,7 @@ class vec3 {
 		{
 			e[0] += v.e[0];
 			e[1] += v.e[1];
-			e[2] += v.e[3];
+			e[2] += v.e[2];
 			return *this;
 		}
 
