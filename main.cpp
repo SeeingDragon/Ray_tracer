@@ -3,17 +3,28 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "Sphere.h"
-
+#include "camera.h"
 
 #include <iostream>
 
 
-color ray_color(const ray& r, const hittable& world)
+color ray_color(const ray& r, const hittable& world,int depth)
 {
 	hit_record rec;
-	if (world.hit(r, 0, infinity, rec))
+
+	//增加深度限制，防止无限递归
+	if (depth <= 0) {
+		return color(0, 0, 0);
+	}
+
+	if (world.hit(r, 0.001, infinity, rec))
 	{
-		return 0.5 * (rec.normal + color(1, 1, 1));
+		//Lambertian散射
+		//利用两圆相切两圆心和切点在同一直线的性质，将获得的随机数进行坐标系变换，即点p加上p的法线可获得p指向散射模型的圆心的向量，如此加上随机点坐标，即可完成转换，注意从散射模型圆心指向该随机点的向量模长不得大于等于1；
+		//point3 target = rec.p + rec.normal + random_in_unit_sphere();
+		//更直观的反射
+		point3 target = rec.p + random_in_heimsphere(rec.normal);
+		return 0.5 * ray_color(ray(rec.p, target - rec.p), world,depth-1);
 	}
 	//获取单位向量
 	//r=origin+t*direction
@@ -34,6 +45,9 @@ int main()
 	const auto aspect_ratio = 16.0 / 9.0;
 	const int image_width = 400;
 	const int image_height = static_cast<int>(image_width/aspect_ratio);
+	const int samples_per_pixel = 100; 
+	const int max_depth = 50;
+
 
 	//World
 	hittable_list world;
@@ -42,15 +56,7 @@ int main()
 
 
 	//Camera
-	auto viewport_height = 2.0;
-	auto viewport_width = aspect_ratio * viewport_height;
-	auto focal_length = 1.0;//camera到image的z轴距离
-
-	auto origin = point3(0, 0, 0);
-	auto horizontal = vec3(viewport_width, 0, 0);
-	auto vertical = vec3(0, viewport_height, 0);
-	//左下角,(0,0,0)定义正中心，变为向量，从(0,0,0)指向左下角
-	auto lower_left_corner = origin - horizontal / 2 - vertical / 2 - vec3(0, 0, focal_length);
+	camera cam;
 
 	//Render
 	std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
@@ -61,18 +67,18 @@ int main()
 		std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
 		for (int i = 0; i <image_width; ++i)
 		{
-			//把u，v限制到（0，1）
-			auto u = double(i) / (image_width - 1);
-			auto v = double(j) / (image_height - 1);
-
-			//定义光线
-			//lower_left_corner是从原点指向左下角的向量
-			ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
-			//定义在vec3.h的颜色向量
-			color pixel_color=ray_color(r,world);
-			write_color(std::cout, pixel_color);
+			color pixel_color(0, 0, 0);
+			for (int s = 0; s < samples_per_pixel; ++s) {
+				//把u，v限制到（0，1）
+				auto u = (i + random_double()) / ((double)image_width - 1);
+				auto v = (j + random_double()) / ((double)image_height - 1);
+				ray r = cam.get_ray(u, v);
+				pixel_color += ray_color(r, world,max_depth);
+			}
+			write_color(std::cout, pixel_color, samples_per_pixel);
 		}
 	}
+	
 	
 	std::cerr << "\nDone.\n";
 }
