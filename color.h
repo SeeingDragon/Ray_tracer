@@ -12,11 +12,11 @@ void write_color(std::ostream& out, color pixel_color, int samples_per_pixel){
 	auto g = pixel_color.y();
 	auto b = pixel_color.z();
 
-	//取样累加了samples_per_pixel次数，所以最后乘以1/sample_per_pixel
+	//取样累加了samples_per_pixel次数，所以最后乘以1/sample_per_pixel,伽马矫正为 gamma=2.0.
 	auto scale = 1.0 / samples_per_pixel;
-	r *= scale;
-	g *= scale;
-	b *= scale;
+	r =sqrt(scale*r);
+	g = sqrt(scale*g);
+	b = sqrt(scale*b);
 
 	//static_cast将(255.999 * r)转换为int类型,并且放大到0-256范围内
 	out << static_cast<int>(256 * clamp(r,0.0,0.999)) << ' '

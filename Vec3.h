@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 
+
 using std::sqrt;
 
 class vec3 {
@@ -50,6 +51,16 @@ class vec3 {
 		double length_squared() const {
 			return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
 		}
+
+		//获取随机向量
+		inline static vec3 random() {
+			return vec3(random_double(), random_double(), random_double());
+		}
+		inline static vec3 random(double min, double max) {
+			return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
+		}
+
+
 
 		//定义
 	public :
@@ -116,5 +127,30 @@ inline vec3 unit_vector(vec3 v)
 {
 	return v / v.length();
 }
+
+inline vec3 random_in_unit_sphere() {
+	while (true) {
+		//在一个立方体随机取点
+		auto p = vec3::random(-1, 1);
+		//如果圆心到p的模长平方大于等于1，则超出单位圆的范围，因此该p点不要
+		if (p.length_squared() >= 1) continue;
+		return p;
+	}
+}
+
+//另一种散射模型
+//对随机点进行归一化
+vec3 random_unit_vector() {
+	return unit_vector(random_in_unit_sphere());
+}
+
+vec3 random_in_heimsphere(const vec3& normal) {
+	vec3 in_unit_sphere = random_in_unit_sphere();
+	if (dot(in_unit_sphere, normal) > 0.0)
+		return in_unit_sphere;
+	else
+		return -in_unit_sphere;
+}
+
 
 #endif
