@@ -60,6 +60,11 @@ class vec3 {
 			return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
 		}
 
+		//返回true,如果向量值非常接近0；
+		bool near_zero()const {
+			const auto s = 1e-8;
+			return (fabs(e[0] < s) && (fabs(e[1] < s) && fabs(e[2] < s)));
+		}
 
 
 		//定义
@@ -152,5 +157,11 @@ vec3 random_in_heimsphere(const vec3& normal) {
 		return -in_unit_sphere;
 }
 
+//反射
+vec3 reflect(const vec3& v, const vec3& n) {
+	//反射向量等于v+2b
+	//因为n是单位向量，所以b向量模长等于dot(v,n)=v的模长乘以cos(vn)，方向就是n方向
+	return v - 2 * dot(v, n) * n;
+}
 
 #endif

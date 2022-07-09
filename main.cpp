@@ -4,6 +4,7 @@
 #include "hittable_list.h"
 #include "Sphere.h"
 #include "camera.h"
+#include "material.h"
 
 #include <iostream>
 
@@ -12,19 +13,30 @@ color ray_color(const ray& r, const hittable& world,int depth)
 {
 	hit_record rec;
 
-	//增加深度限制，防止无限递归
+	//增加深度限制，防止无限递归,并且在最大深度不返回光贡献
 	if (depth <= 0) {
 		return color(0, 0, 0);
 	}
 
 	if (world.hit(r, 0.001, infinity, rec))
 	{
+		/*
 		//Lambertian散射
 		//利用两圆相切两圆心和切点在同一直线的性质，将获得的随机数进行坐标系变换，即点p加上p的法线可获得p指向散射模型的圆心的向量，如此加上随机点坐标，即可完成转换，注意从散射模型圆心指向该随机点的向量模长不得大于等于1；
-		//point3 target = rec.p + rec.normal + random_in_unit_sphere();
+		point3 target = rec.p + rec.normal + random_in_unit_sphere();
 		//更直观的反射
-		point3 target = rec.p + random_in_heimsphere(rec.normal);
+		//point3 target = rec.p + random_in_heimsphere(rec.normal);
 		return 0.5 * ray_color(ray(rec.p, target - rec.p), world,depth-1);
+		*/
+		
+		ray scattered;
+		color attenuation;
+		if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+			//乘法计算贡献值
+			return attenuation * ray_color(scattered, world, depth - 1);
+		return color(0, 0, 0);
+		
+
 	}
 	//获取单位向量
 	//r=origin+t*direction
@@ -51,8 +63,17 @@ int main()
 
 	//World
 	hittable_list world;
-	world.add(make_shared<sphere>(point3(0, 0, -1), 0.5));
-	world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
+
+	auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+	auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
+	auto material_left = make_shared<metal>(color(0.8, 0.8, 0.8),0.3);
+	auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2),1.0);
+
+	world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0,material_ground));
+	world.add(make_shared<sphere>(point3(0.0, 0.0, -1.0),0.5,material_center));
+	world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, material_left));
+	world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
+	
 
 
 	//Camera
