@@ -14,11 +14,11 @@ class camera {
 			vec3 vup=vp;
 
 			//原点到camera的z轴距离
-			auto focal_length = 1.0;
+			//auto focal_length = 1.0;
 			//将垂直是视野角度转为弧度
 			auto theta = degrees_to_radians(vfov);
 			//计算摄像机长度和宽度
-			auto h = tan(theta / 2)*focal_length;
+			auto h = tan(theta / 2);
 			auto viewport_height = 2.0 * h;
 			auto viewport_width = viewport_height * aspect_tatio;
 
